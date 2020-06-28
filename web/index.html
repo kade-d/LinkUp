@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Submission to Techpoint's S.O.S. challenge 2020">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="techpointchallenge">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <meta name="google-signin-client_id" content="953059037657-5e5k55bv6uat4hsfdgsdbuggq9ps625o.apps.googleusercontent.com">
+
+  <!-- Favicon -->
+  <link rel="shortcut icon" type="image/png" href="favicon.png"/>
+
+  <title>techpointchallenge</title>
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <!-- This script installs service_worker.js to provide PWA functionality to
+       application. For more information, see:
+       https://developers.google.com/web/fundamentals/primers/service-workers -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('flutter_service_worker.js');
+      });
+    }
+  </script>
+
+  <!-- START FIREBASE IMPORTS -->
+  <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+  <script src="https://www.gstatic.com/firebasejs/7.15.5/firebase-app.js"></script>
+
+  <!-- If you enabled Analytics in your project, add the Firebase SDK for Analytics -->
+  <script src="https://www.gstatic.com/firebasejs/7.15.5/firebase-analytics.js"></script>
+
+  <!-- Add Firebase products that you want to use -->
+  <script src="https://www.gstatic.com/firebasejs/7.15.5/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.15.5/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.15.5/firebase-functions.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.15.5/firebase-storage.js"></script>
+  <!-- END FIREBASE IMPORTS -->
+
+  <!-- START FIREBASE INITIALIZATION -->
+  <script>
+    var firebaseConfig = {
+      apiKey: "AIzaSyDuiHkQETuilfPSTu36_OzbjjkIvPm4sX8",
+      authDomain: "techpoint-sos-challenge.firebaseapp.com",
+      databaseURL: "https://techpoint-sos-challenge.firebaseio.com",
+      projectId: "techpoint-sos-challenge",
+      storageBucket: "techpoint-sos-challenge.appspot.com",
+      messagingSenderId: "953059037657",
+      appId: "1:953059037657:web:d4a13c2e59e998872409c8",
+      measurementId: "G-ZPPB2KCBLK"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+  </script>
+  <!-- END FIREBASE INITIALIZATION -->
+
+  <script src="main.dart.js" type="application/javascript"></script>
+
+</body>
+</html>
