@@ -8,6 +8,9 @@ import 'package:techpointchallenge/pages/auth_page.dart';
 import 'package:techpointchallenge/pages/calendar_page.dart';
 import 'package:techpointchallenge/pages/team_page.dart';
 import 'package:techpointchallenge/services/authentication.dart';
+import 'package:techpointchallenge/services/firestore/schedule_firestore.dart';
+import 'package:techpointchallenge/services/firestore/user_firestore.dart';
+import 'model/schedule.dart';
 import 'services/globals.dart' as globals;
 
 
@@ -15,10 +18,14 @@ void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
 
-  runApp(ChangeNotifierProvider(
-    create: (context) => Authentication(),
-    child: MyApp(),
-  ));
+  runApp(
+    MultiProvider(
+      providers: [
+          ChangeNotifierProvider(create: (context) => Authentication(),),
+      ],
+      child: MyApp(),
+    )
+  );
 
 }
 
@@ -47,7 +54,12 @@ class MyApp extends StatelessWidget {
           if(auth.firebaseUser == null){
             return AuthPage();
           } else {
-            return MyHomePage();
+            return MultiProvider(
+              providers: [
+                StreamProvider(create: (context) => UserFirestore.getUserAsStream(auth.firebaseUser.uid),)
+              ],
+              child: MyHomePage()
+            );
           }
         },
       ),
@@ -78,7 +90,6 @@ class _MyHomePageState extends State<MyHomePage> {
       TeamsPage(),
       AccountPage(),
     ];
-
 
     if (globals.useMobileLayout) {
       return Row(

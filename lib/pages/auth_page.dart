@@ -21,20 +21,28 @@ class _AuthPageState extends State<AuthPage> {
       body: SafeArea(
         child: Consumer<Authentication>(
           builder: (context, auth, child) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Center(
-                  child: SignInButton(
-                    Buttons.GoogleDark,
-                    onPressed: () async {
-                      await auth.signInWithGoogle();
-                    },
-                  ),
-                ),
-              ],
-            );
+            return FutureBuilder<bool>(
+              future: auth.initializeCurrentUser(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData && snapshot.data) {
+                  return Center(
+                    child: Text("Signing you in"),
+                  );
+                } else {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Center(
+                        child: SignInButton(
+                          Buttons.GoogleDark,
+                          onPressed: () async => await auth.signInWithGoogle(),
+                        ),
+                      ),
+                    ],
+                  );
+                }
+              });
           },
         ),
       ),

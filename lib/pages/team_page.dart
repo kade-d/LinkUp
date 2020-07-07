@@ -3,8 +3,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:techpointchallenge/model/organization.dart';
+import 'package:techpointchallenge/model/user.dart';
 import 'package:techpointchallenge/services/authentication.dart';
 import 'package:techpointchallenge/services/firestore/org_firestore.dart';
+import 'package:techpointchallenge/services/firestore/user_firestore.dart';
 
 class TeamsPage extends StatefulWidget {
   @override
@@ -56,13 +58,17 @@ class _TeamsPageState extends State<TeamsPage> {
                                   ),
                                 ],
                               ),
-                              FlatButton.icon(
-                                icon: Icon(Icons.remove_circle),
-                                label: Text("Leave organization"),
-                                onPressed: () async {
-                                  await OrgFireStore.updateUsersOrg(auth.firebaseUser.uid, "");
-                                  setState(() {});
-                                }
+                              Consumer<User>(
+                                builder: (context, user, child) {
+                                  return FlatButton.icon(
+                                    icon: Icon(Icons.remove_circle),
+                                    label: Text("Leave organization"),
+                                    onPressed: () async {
+                                      user.orgId = null;
+                                      await UserFirestore.updateUser(user);
+                                    }
+                                  );
+                               }
                               )
                             ],
                           ),
@@ -81,7 +87,7 @@ class _TeamsPageState extends State<TeamsPage> {
             ),
             RaisedButton(
               child: Text("Create organization"),
-              onPressed: createOrg,
+              onPressed: () => createOrg(Provider.of<User>(context, listen: false)),
             )
           ],
         ),
@@ -89,7 +95,7 @@ class _TeamsPageState extends State<TeamsPage> {
     );
   }
 
-  void createOrg(){
+  void createOrg(User user){
     showDialog<void>(
       context: context,
       builder: (context) {
@@ -118,7 +124,7 @@ class _TeamsPageState extends State<TeamsPage> {
                 borderRadius: BorderRadius.circular(20),
                 onTap: () async {
                   formKey.currentState.save();
-                  await OrgFireStore.createOrganization(org);
+                  await OrgFireStore.createOrganization(org, user);
                   setState(() {});
                   Navigator.of(context).pop();
                 },
@@ -132,10 +138,6 @@ class _TeamsPageState extends State<TeamsPage> {
         );
       }
     );
-  }
-
-  void submitForm(){
-
   }
 }
 

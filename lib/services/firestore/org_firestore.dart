@@ -1,17 +1,18 @@
-
-import 'dart:developer';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:techpointchallenge/model/organization.dart';
+import 'package:techpointchallenge/model/user.dart';
+import 'package:techpointchallenge/services/firestore/user_firestore.dart';
 
 class OrgFireStore {
 
   static Future<Organization> getOrganizationFromUser(FirebaseUser user) async {
     String orgId = await _getOrganizationIdForUser(user);
-    if(orgId.length > 0){
+    if(orgId != null && orgId.length > 0){
+      print("Getting org from id");
       return await _getOrganizationFromId(orgId);
     } else {
+      print("No org id");
       return Organization.fromNothing();
     }
   }
@@ -49,7 +50,7 @@ class OrgFireStore {
     return org;
   }
 
-  static Future<Organization> createOrganization(Organization org) async {
+  static Future<Organization> createOrganization(Organization org, User owner) async {
     await Firestore.instance.collection('organizations').document(org.ownerId).setData(
       {
         "name": org.name,
@@ -61,37 +62,18 @@ class OrgFireStore {
       print("Create org error: " + e.toString());
     });
 
-    updateUsersOrg(org.ownerId, org.ownerId);
+    owner.orgId = owner.firebaseId;
+
+    await UserFirestore.updateUser(owner);
 
     return org;
   }
 
   static Future<void> updateOrg(Organization org) async {
-
     await Firestore.instance.collection('organizations').document(org.ownerId).setData({
       "user_ids": org.userIds
     },
     merge: true
-    );
-
-  }
-
-  static Future<void> createUser(FirebaseUser user) async {
-
-    await Firestore.instance.collection('users').document(user.uid).setData(
-      {
-        "name": user.displayName
-      },
-      merge: true
-    );
-  }
-
-  static Future<void> updateUsersOrg(String userId, String orgId) async{
-    await Firestore.instance.collection('users').document(userId).setData(
-      {
-        "org_id" : orgId
-      },
-      merge: true
     );
   }
 

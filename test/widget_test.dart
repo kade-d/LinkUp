@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:techpointchallenge/main.dart';
-import 'package:techpointchallenge/services/calendar.dart';
+import 'package:techpointchallenge/services/calendar_helper.dart';
 import 'package:techpointchallenge/services/duration_helper.dart';
 
 void main() {

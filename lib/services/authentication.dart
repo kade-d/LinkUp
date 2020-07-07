@@ -1,39 +1,38 @@
 import 'dart:developer';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:techpointchallenge/main.dart';
 import 'package:techpointchallenge/services/firestore/org_firestore.dart';
+import 'package:techpointchallenge/services/firestore/user_firestore.dart';
 
 class Authentication extends ChangeNotifier {
 
   FirebaseUser firebaseUser;
+
   FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
-
-  Authentication(){
-    _initializeCurrentUser();
-  }
-
-  Future<void> _initializeCurrentUser() async {
-    print(await FirebaseApp.instance.options);
+  Future<bool> initializeCurrentUser() async {
 
     _firebaseAuth.onAuthStateChanged.listen((user) async {
       if(user != null){
-        firebaseUser = user;
-        await OrgFireStore.createUser(user);
-        log(user.email);
-      } else {
-        log("no user");
+        if(firebaseUser == null){
+          firebaseUser = user;
+          await UserFirestore.createUser(user);
+          notifyListeners();
+        }
       }
-      notifyListeners();
     });
 
-    await _firebaseAuth.currentUser();
+    firebaseUser = await _firebaseAuth.currentUser();
+    if(firebaseUser != null){
+      await UserFirestore.createUser(firebaseUser);
+      notifyListeners();
+      return true;
+    }
+    return false;
   }
 
   Future<void> signInWithGoogle() async{
