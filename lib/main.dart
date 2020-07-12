@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -8,11 +7,8 @@ import 'package:techpointchallenge/pages/auth_page.dart';
 import 'package:techpointchallenge/pages/calendar_page.dart';
 import 'package:techpointchallenge/pages/team_page.dart';
 import 'package:techpointchallenge/services/authentication.dart';
-import 'package:techpointchallenge/services/firestore/schedule_firestore.dart';
 import 'package:techpointchallenge/services/firestore/user_firestore.dart';
-import 'model/schedule.dart';
 import 'services/globals.dart' as globals;
-
 
 void main() async {
 

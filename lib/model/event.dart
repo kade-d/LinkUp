@@ -1,14 +1,18 @@
 class Event {
 
+  int id;
   String name;
   DateTime startDate;
   DateTime endDate;
-  String creatorId;
-  List<String> acceptedUserIds;
-  List<String> invitedUserIds;
+  List<String> acceptedUserEmails;
+  List<String> invitedUserEmails;
 
-  Event(this.name, this.startDate, this.endDate);
+  Event(this.name, this.startDate, this.endDate, this.acceptedUserEmails,
+    this.invitedUserEmails);
 
-  Event.fromNothing();
+  Event.fromNothing(){
+    this.acceptedUserEmails = List();
+    this.invitedUserEmails = List();
+  }
 
 }

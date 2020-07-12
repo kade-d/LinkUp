@@ -4,9 +4,9 @@ class Organization {
   String photoUrl;
 
   String ownerId;
-  List<String> userIds;
+  List<String> userEmails;
 
-  Organization(this.name, this.photoUrl, this.ownerId, this.userIds);
+  Organization(this.name, this.photoUrl, this.ownerId, this.userEmails);
 
   Organization.fromNothing();
 

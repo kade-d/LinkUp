@@ -5,14 +5,10 @@ import 'dart:typed_data';
 
 class ImageUploader {
 
-  List<File> uploadedFiles = List();
-  List<Uint8List> uploadedBytes = List();
-
-  startFilePicker(bool acceptMultiple) async {
-
+  static Future<File> startFilePicker() async {
     final readBytesFromFiles = Completer<List<Uint8List>>();
     InputElement uploadInput = FileUploadInputElement();
-    uploadInput.multiple = acceptMultiple;
+    uploadInput.multiple = false;
     uploadInput.accept = 'image/*';
     uploadInput.click();
 
@@ -32,10 +28,6 @@ class ImageUploader {
     document.body.append(uploadInput);
     final List<Uint8List> bytes = await readBytesFromFiles.future;
 
-    for(int x = 0; x < bytes.length; x++){
-      uploadedFiles.add(files[x]);
-      uploadedBytes.add(bytes[x]);
-    }
+    return files[0];
   }
-
 }

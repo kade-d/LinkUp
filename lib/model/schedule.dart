@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'event.dart';
 
 class Schedule {
+
   List<Event> events;
 
   Schedule(this.events);
@@ -13,19 +14,21 @@ class Schedule {
     if (json != null) {
       for (var event in json) {
         events.add(Event(event['name'], DateTime.parse(event['start_date']),
-            DateTime.parse(event['end_date'])));
+            DateTime.parse(event['end_date']), event['accepted_user_emails'].cast<String>(), event['invited_user_emails'].cast<String>()));
       }
     } else {
       log("User's schedule could not be converted from json (was null)");
     }
   }
 
-  List<Map<String, String>> toJson() {
+  List<Map<String, Object>> toJson() {
     return events.map((event) {
         return {
           "name": event.name,
           "start_date": event.startDate.toIso8601String(),
-          "end_date": event.endDate.toIso8601String()
+          "end_date": event.endDate.toIso8601String(),
+          "invited_user_emails" : event.invitedUserEmails,
+          "accepted_user_emails" : event.acceptedUserEmails
         };
       }).toList();
   }

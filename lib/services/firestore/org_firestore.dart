@@ -35,16 +35,16 @@ class OrgFireStore {
     Organization org;
     await Firestore.instance.collection('organizations').document(orgId).get()
       .then((snapshot){
-        if(snapshot.exists){
-          org = Organization(
-            snapshot.data['name'],
-            snapshot.data['photo_url'],
-            orgId,
-            (snapshot.data['user_ids'] as List).cast<String>()
-          );
-        }
-      })
-    .catchError((e){
+      if(snapshot.exists){
+        org = Organization(
+          snapshot.data['name'],
+          snapshot.data['photo_url'],
+          orgId,
+          (snapshot.data['user_emails'] as List).cast<String>()
+        );
+      }
+    })
+      .catchError((e){
       print("Get org from id error: " + e.toString());
     });
     return org;
@@ -56,7 +56,7 @@ class OrgFireStore {
         "name": org.name,
         "owner_id": org.ownerId,
         "photo_url": org.photoUrl,
-        "user_ids": org.userIds
+        "user_emails": org.userEmails
       }
     ).catchError((e){
       print("Create org error: " + e.toString());
@@ -71,11 +71,24 @@ class OrgFireStore {
 
   static Future<void> updateOrg(Organization org) async {
     await Firestore.instance.collection('organizations').document(org.ownerId).setData({
-      "user_ids": org.userIds
+      "user_emails": org.userEmails,
+      "photo_url": org.photoUrl,
     },
     merge: true
     );
   }
 
+  static Future<List<String>> getCoworkerEmails(String orgId) async {
+
+    List<String> emails = List();
+    await Firestore.instance.collection('organizations').document(orgId).get()
+      .then((snapshot){
+        emails = snapshot.data["user_emails"].cast<String>();
+    })
+      .catchError((e){
+      print("Get coworker emails error: " + e.toString());
+    });
+    return emails;
+  }
 
 }

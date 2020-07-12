@@ -1,8 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:duration/duration.dart';
 import 'package:techpointchallenge/model/event.dart';
 import 'package:techpointchallenge/model/schedule.dart';
-import 'package:techpointchallenge/services/duration_helper.dart';
 
 class ScheduleFirestore {
 

@@ -38,10 +38,8 @@ class UserFirestore {
 
   static Stream<User> getUserAsStream(String userId){
 
-    //TODO func being called too much
-
+    //TODO func being called too much ?
     var stream = Firestore.instance.collection('users').document(userId).snapshots().map((snapshot){
-      print(snapshot.data);
       return User.fromJson(snapshot.data, userId);
     });
 

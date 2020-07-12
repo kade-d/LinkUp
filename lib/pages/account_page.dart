@@ -6,7 +6,10 @@ import 'package:techpointchallenge/model/user.dart';
 import 'package:techpointchallenge/pages/auth_page.dart';
 import 'package:techpointchallenge/services/authentication.dart';
 import 'package:techpointchallenge/services/firestore/user_firestore.dart';
+import 'package:techpointchallenge/services/image_uploader.dart';
+import 'package:techpointchallenge/services/storage/firebase_storage.dart';
 import '../services/globals.dart' as globals;
+import 'dart:html';
 
 class AccountPage extends StatefulWidget {
   @override
@@ -21,6 +24,9 @@ class _AccountPageState extends State<AccountPage> {
 
   @override
   Widget build(BuildContext context) {
+
+    var size = MediaQuery.of(context).size;
+
     return SingleChildScrollView(
       child: Center(
         child: Consumer<Authentication>(
@@ -33,7 +39,11 @@ class _AccountPageState extends State<AccountPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         InkWell(
-                          onTap: () => print("tapped"),
+                          onTap: () async {
+                            File file = await ImageUploader.startFilePicker();
+                            user.photoUrl = await FirebaseStorage.uploadImage(file, "users/" + user.firebaseId);
+                            UserFirestore.updateUser(user);
+                          },
                           onHover: (value) {
                             setState(() => accountPicHovered = value);
                           },
@@ -43,7 +53,7 @@ class _AccountPageState extends State<AccountPage> {
                                 children: <Widget>[
                                   Material(
                                     shape: CircleBorder(),
-                                    child: Image.network(user.photoUrl, fit: BoxFit.fill,)),
+                                    child: Image.network(user.photoUrl ?? "No url", fit: BoxFit.fill, width: size.width * .1, height: size.height * .1,)),
                                   Visibility(
                                     visible: accountPicHovered,
                                     child: Icon(Icons.camera_alt),
