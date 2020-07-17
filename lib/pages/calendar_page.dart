@@ -1,5 +1,4 @@
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -7,12 +6,11 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:techpointchallenge/model/schedule.dart';
 import 'package:techpointchallenge/model/user.dart';
-import 'package:techpointchallenge/services/authentication.dart';
 import 'package:techpointchallenge/services/calendar_helper.dart';
 import 'package:techpointchallenge/model/event.dart';
 import 'package:techpointchallenge/services/duration_helper.dart';
-import 'package:techpointchallenge/services/firestore/org_firestore.dart';
 import 'package:techpointchallenge/services/firestore/schedule_firestore.dart';
+import 'package:techpointchallenge/services/validator.dart';
 
 class CalendarPage extends StatefulWidget {
   @override
@@ -46,13 +44,11 @@ class _CalendarViewState extends State<CalendarView> {
   CalendarHelper calendarHelper = CalendarHelper();
   DateTime now = DateTime.now();
   DateTime viewDate = DateTime.now();
-  FirebaseUser user;
 
   bool addingEvent = false;
 
   @override
   Widget build(BuildContext context) {
-    user = Provider.of<Authentication>(context).firebaseUser;
 
     DateFormat formatter = DateFormat('yMMMM');
 
@@ -61,42 +57,59 @@ class _CalendarViewState extends State<CalendarView> {
         if (user != null) {
           return Column(
             children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 30),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    MaterialButton(
+                      color: Colors.white,
+                      shape: CircleBorder(),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Icon(Icons.arrow_back),
+                      ),
+                      onPressed: () => setState(() {
+                        viewDate = viewDate.subtract(Duration(
+                            days: calendarHelper.getDaysInCurrentMonth(
+                                now.year, now.month)));
+                      }),
+                    ),
+                    Text(
+                      viewDate == now
+                          ? formatter.format(now)
+                          : formatter.format(viewDate),
+                      style: Theme.of(context).textTheme.headline2,
+                    ),
+                    MaterialButton(
+                      shape: CircleBorder(),
+                      color: Colors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Icon(Icons.arrow_forward),
+                      ),
+                      onPressed: () => setState(() {
+                        viewDate = viewDate.add(Duration(
+                            days: calendarHelper.getDaysInCurrentMonth(
+                                now.year, now.month)));
+                      }),
+                    ),
+                  ],
+                ),
+              ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  RaisedButton(
-                    child: Icon(Icons.arrow_back),
-                    onPressed: () => setState(() {
-                      viewDate = viewDate.subtract(Duration(
-                          days: calendarHelper.getDaysInCurrentMonth(
-                              now.year, now.month)));
-                    }),
-                  ),
-                  Text(
-                    viewDate == now
-                        ? formatter.format(now)
-                        : formatter.format(viewDate),
-                    style: Theme.of(context).textTheme.headline2,
-                  ),
-                  RaisedButton(
-                    child: Icon(Icons.arrow_forward),
-                    onPressed: () => setState(() {
-                      viewDate = viewDate.add(Duration(
-                          days: calendarHelper.getDaysInCurrentMonth(
-                              now.year, now.month)));
-                    }),
-                  ),
-                ],
+                children: getDaysOfWeekAbbr(viewDate),
               ),
               GridView.count(
-                childAspectRatio: 1.5,
+                childAspectRatio: MediaQuery.of(context).size.aspectRatio * .9,
                 crossAxisCount: 7,
                 primary: false,
                 shrinkWrap: true,
+                mainAxisSpacing: 1,
+                crossAxisSpacing: 1,
                 children: viewDate == now
                     ? getMonthGridViewChildren(user, now, true, user.schedule)
-                    : getMonthGridViewChildren(
-                        user, viewDate, false, user.schedule),
+                    : getMonthGridViewChildren(user, viewDate, false, user.schedule),
               ),
             ],
           );
@@ -109,17 +122,30 @@ class _CalendarViewState extends State<CalendarView> {
     );
   }
 
-  List<Widget> getMonthGridViewChildren(
-      User user, DateTime selectedMonth, bool isCurrent, Schedule schedule) {
+  List<Widget> getDaysOfWeekAbbr(DateTime selectedMonth){
+
     List<Widget> children = List();
 
+    var formatter = DateFormat(DateFormat.ABBR_WEEKDAY);
+
+    for(int x = 1; x <= 7; x++){
+      DateTime childDate = DateTime(selectedMonth.year, selectedMonth.month, x);
+      children.add(Expanded(child: Text(formatter.format(childDate))));
+    }
+
+    return children;
+  }
+
+  List<Widget> getMonthGridViewChildren(User user, DateTime selectedMonth, bool isCurrent, Schedule schedule) {
+    List<Widget> children = List();
+    
     for (int x = 1; x <= calendarHelper.getDaysInCurrentMonth(selectedMonth.year, selectedMonth.month); x++) {
       DateTime childDate = DateTime(selectedMonth.year, selectedMonth.month, x);
 
       List<Event> childDateEvents = schedule.getEventsForDay(childDate);
 
       children.add(Material(
-        color: Colors.white,
+        color: x == selectedMonth.day && isCurrent ? Theme.of(context).accentColor : Colors.white,
         child: InkWell(
           onTap: () => showDialog<void>(
               context: context,
@@ -130,23 +156,19 @@ class _CalendarViewState extends State<CalendarView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 5, left: 5),
-                child: Text(x.toString()),
+                padding: const EdgeInsets.all(5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [Text(x.toString(), style: Theme.of(context).textTheme.bodyText1,)
+                  ],
+                ),
               ),
-              x == selectedMonth.day && isCurrent
-                  ? Center(
-                      child: Icon(
-                        Icons.star,
-                        color: Colors.blue,
-                      ),
-                    )
-                  : Container(),
               childDateEvents.length == 0
                   ? Container()
                   : Flexible(
                       child: Center(
-                          child: AutoSizeText(
-                        childDateEvents.length.toString() + " Event(s)",
+                        child: Text(
+                        childDateEvents.length.toString() + " Event(s)", style: Theme.of(context).textTheme.bodyText1,
                         maxLines: 1,
                       )),
                     )
@@ -172,20 +194,22 @@ class DayDialog extends StatefulWidget {
 
 class _DayDialogState extends State<DayDialog> {
   bool addEventMode = false;
-  bool addingCoworker = false;
 
   Event event = Event.fromNothing();
 
   @override
   Widget build(BuildContext context) {
-    event.startDate = widget.selectedDate;
 
     GlobalKey<FormState> formKey = GlobalKey();
 
     var formatter = DateFormat(DateFormat.YEAR_MONTH_DAY);
+    var timeFormatter = DateFormat(DateFormat.HOUR_MINUTE);
 
-    List<Event> eventList =
-        widget.schedule.getEventsForDay(widget.selectedDate);
+    List<Event> eventList = widget.schedule.getEventsForDay(widget.selectedDate);
+
+    TimeOfDay selectedTime;
+
+    TextEditingController timeController = TextEditingController();
 
     return AlertDialog(
       title: Text(formatter.format(widget.selectedDate)),
@@ -197,72 +221,39 @@ class _DayDialogState extends State<DayDialog> {
             addEventMode
                 ? Column(
                     children: [
-                      addingCoworker
-                          ? Container(
-                              constraints: BoxConstraints.tight(
-                                  MediaQuery.of(context).size * .33),
-                              child: FutureBuilder<List<String>>(
-                                  future: OrgFireStore.getCoworkerEmails(
-                                      widget.user.orgId),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData) {
-                                      return ListView.builder(
-                                        primary: false,
-                                        shrinkWrap: true,
-                                        itemCount: snapshot.data.length,
-                                        itemBuilder: (context, index) {
-                                          String coworkerEmail =
-                                              snapshot.data[index];
-                                          return ListTile(
-                                            title: Text(coworkerEmail),
-                                            trailing: event.invitedUserEmails
-                                                    .contains(coworkerEmail)
-                                                ? Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    Icon(Icons.check, color: Colors.green,),
-                                                    Padding(
-                                                      padding: const EdgeInsets.all(8.0),
-                                                      child: IconButton(
-                                                        splashRadius: 16,
-                                                        icon: Icon(Icons.delete, color: Colors.red,),
-                                                        onPressed: () => setState(() => event.invitedUserEmails.remove(coworkerEmail)),
-                                                      ),
-                                                    )
-                                                  ],
-                                                )
-                                                : RaisedButton(
-                                                    child: Text("Add"),
-                                                    onPressed: () => setState(() => event.invitedUserEmails.add(coworkerEmail))
-                                                  ),
-                                          );
-                                        },
-                                      );
-                                    } else {
-                                      return CircularProgressIndicator();
-                                    }
-                                  }))
-                          : Container(),
                       TextFormField(
+                        validator: (value) => Validator.validateShortLength(value),
                         onSaved: (value) => event.name = value,
                         decoration: InputDecoration(labelText: "Title"),
                       ),
                       TextFormField(
-                        onSaved: (value) => event.endDate = event.startDate
-                            .add(DurationHelper.parseHumanDuration(value)),
-                        decoration: InputDecoration(
-                            labelText: "Duration (e.g. 15m or 2 hours)"),
+                        validator: (value) => Validator.validateShortLength(value),
+                        controller: timeController,
+                        readOnly: true,
+                        onTap: () async {
+                          event.startDate = widget.selectedDate;
+                          selectedTime = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.now()
+                          );
+                          if(selectedTime != null){
+                            event.startDate = event.startDate.add(Duration(hours: selectedTime.hour, minutes: selectedTime.minute));
+                            timeController.text = (timeFormatter.format(event.startDate));
+                          }
+                        },
+                        decoration: InputDecoration(labelText: "Start time"),
+                      ),
+                      TextFormField(
+                        onSaved: (value) => event.endDate = event.startDate.add(DurationHelper.parseHumanDuration(value)),
+                        decoration: InputDecoration(labelText: "Duration (e.g. 15m or 2 hours)"),
                       ),
                     ],
                   )
                 : eventList.length == 0
-                    ? Center(
-                        child: Text("No events for today"),
-                      )
-                    : Container(
-                        constraints: BoxConstraints.tight(
-                            MediaQuery.of(context).size * .25),
-                        child: EventList(eventList)),
+                    ? Center(child: Text("No events for today"),)
+                    : Container(constraints: BoxConstraints.tight(MediaQuery.of(context).size * .25),
+                        child: EventList(eventList)
+            ),
           ],
         ),
       ),
@@ -272,31 +263,18 @@ class _DayDialogState extends State<DayDialog> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(20),
-                      onTap: () async {
-                        setState(() {
-                          addingCoworker = !addingCoworker;
-                        });
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text("Add coworker"),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(20),
-                      onTap: () async {
-                        formKey.currentState.save();
-                        await ScheduleFirestore.addScheduleItem(
+                    child: MaterialButton(
+                      shape: StadiumBorder(),
+                      onPressed: () async {
+                        if(formKey.currentState.validate()){
+                          formKey.currentState.save();
+                          await ScheduleFirestore.addScheduleItem(
                             event, widget.user.firebaseId);
-                        Navigator.of(context).pop();
-                        setState(() {
-                          addEventMode = false;
-                        });
+                          Navigator.of(context).pop();
+                          setState(() {
+                            addEventMode = false;
+                          });
+                        }
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
@@ -308,9 +286,9 @@ class _DayDialogState extends State<DayDialog> {
               )
             : Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(20),
-                  onTap: () async {
+                child: MaterialButton(
+                  shape: StadiumBorder(),
+                  onPressed: () async {
                     setState(() {
                       addEventMode = true;
                     });

@@ -1,13 +1,17 @@
+import 'dart:collection';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:techpointchallenge/assets/survey_questions.dart';
+import 'package:techpointchallenge/model/survey/survey_question.dart';
 import 'package:techpointchallenge/model/user.dart';
-import 'package:techpointchallenge/pages/auth_page.dart';
 import 'package:techpointchallenge/services/authentication.dart';
 import 'package:techpointchallenge/services/firestore/user_firestore.dart';
-import 'package:techpointchallenge/services/image_uploader.dart';
 import 'package:techpointchallenge/services/storage/firebase_storage.dart';
+import 'package:techpointchallenge/services/validator.dart';
+import 'package:techpointchallenge/widgets/upload_picture_widget.dart';
 import '../services/globals.dart' as globals;
 import 'dart:html';
 
@@ -38,129 +42,115 @@ class _AccountPageState extends State<AccountPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        InkWell(
-                          onTap: () async {
-                            File file = await ImageUploader.startFilePicker();
-                            user.photoUrl = await FirebaseStorage.uploadImage(file, "users/" + user.firebaseId);
+                        CircularUploadPic(
+                          onNewImageSelected: (file) async {
+                            user.photoUrl = await FirebaseStorage.uploadImage(file, "users/" + user.firebaseId.toString());
                             UserFirestore.updateUser(user);
                           },
-                          onHover: (value) {
-                            setState(() => accountPicHovered = value);
-                          },
-                          child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Stack(
-                                children: <Widget>[
-                                  Material(
-                                    shape: CircleBorder(),
-                                    child: Image.network(user.photoUrl ?? "No url", fit: BoxFit.fill, width: size.width * .1, height: size.height * .1,)),
-                                  Visibility(
-                                    visible: accountPicHovered,
-                                    child: Icon(Icons.camera_alt),
-                                  )
-                                ],
-                              )),
-                        ),
+                          photoUrl: user.photoUrl,
+                          radius: 60,
+                        )
                       ],
                     ),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text(user.email ?? "No email"),
+                      child: Text(user.name ?? "No name"),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Container(
-                        decoration: BoxDecoration(
-                            border: Border.all(color: Colors.white10)),
+                        decoration: BoxDecoration(border: Border.all(color: Colors.white10)),
                         height: 1,
                         width: MediaQuery.of(context).size.width * .9,
                       ),
                     ),
                     Container(
-                      width: MediaQuery.of(context).size.width * .5,
+                      width: globals.useMobileLayout ? MediaQuery.of(context).size.width * .9 :  MediaQuery.of(context).size.width * .5,
                       child: !editMode
                           ? Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Stack(
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Align(
-                                        alignment: Alignment.center,
-                                        child: Text(user.name ?? "No name")),
-                                    Align(
-                                      alignment: Alignment.centerRight,
-                                      child: FlatButton.icon(
-                                        label: Text("Edit"),
-                                        icon: Icon(MdiIcons.pencil),
-                                        onPressed: () => setState(
-                                            () => editMode = !editMode),
-                                      ),
+                                    FlatButton.icon(
+                                      textColor: Theme.of(context).textTheme.button.color,
+                                      label: Text("Tell us more"),
+                                      icon: Icon(MdiIcons.clipboardOutline),
+                                      onPressed: () => showDialog(context: context, builder: (context) => SurveyWidget()),
+                                    ),
+                                    FlatButton.icon(
+                                      textColor: Theme.of(context).textTheme.button.color,
+                                      label: Text("Edit"),
+                                      icon: Icon(MdiIcons.pencil),
+                                      onPressed: () => setState(
+                                          () => editMode = !editMode),
                                     ),
                                   ],
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: Text(user.jobTitle ?? "Such empty"),
+                                  child: Text(user.email ?? "No email"),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: Text(user.bio ?? "Such empty"),
+                                  child: Text(user.jobTitle ?? "No title"),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(user.bio ?? "No bio",),
                                 ),
                               ],
                             )
-                          : Padding(
-                              padding: const EdgeInsets.all(20.0),
-                              child: Form(
-                                key: formKey,
-                                child: Column(
+                          : Form(
+                            key: formKey,
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    Row(
-                                      children: [
-                                        FlatButton.icon(
-                                          label: Text("Edit"),
-                                          icon: Icon(MdiIcons.pencil),
-                                          onPressed: () => setState(
-                                              () => editMode = !editMode),
-                                        ),
-                                      ],
+                                    FlatButton.icon(
+                                      textColor: Theme.of(context).textTheme.button.color,
+                                      label: Text("Edit"),
+                                      icon: Icon(MdiIcons.pencil),
+                                      onPressed: () => setState(
+                                          () => editMode = !editMode),
                                     ),
-                                    TextFormField(
-                                      initialValue: user.name,
-                                      decoration:
-                                          InputDecoration(hintText: "Name"),
-                                      onSaved: (value) =>
-                                          setState(() => user.name = value),
-                                    ),
-                                    TextFormField(
-                                      initialValue: user.bio,
-                                      decoration:
-                                          InputDecoration(hintText: "About me"),
-                                      onSaved: (value) =>
-                                          setState(() => user.bio = value),
-                                    ),
-                                    TextFormField(
-                                      initialValue: user.jobTitle,
-                                      decoration: InputDecoration(
-                                          hintText: "Position Title"),
-                                      onSaved: (value) =>
-                                          setState(() => user.jobTitle = value),
-                                    ),
-                                    TextFormField(
-                                      initialValue: user.photoUrl,
-                                      decoration:
-                                          InputDecoration(hintText: "Photo"),
-                                      onSaved: (value) =>
-                                          setState(() => user.photoUrl = value),
-                                    ),
-                                    RaisedButton(
-                                      child: Text("Submit changes"),
-                                      onPressed: () async =>
-                                          await submitForm(user),
-                                    )
                                   ],
                                 ),
-                              ),
+                                TextFormField(
+                                  validator: (value) => Validator.validateShortLength(value),
+                                  style: Theme.of(context).textTheme.bodyText2,
+                                  initialValue: user.name,
+                                  decoration: InputDecoration(hintText: "Name"),
+                                  onSaved: (value) => setState(() => user.name = value)
+                                ),
+                                TextFormField(
+                                  validator: (value) => Validator.validateLongLength(value),
+                                  style: Theme.of(context).textTheme.bodyText2,
+                                  initialValue: user.bio,
+                                  decoration: InputDecoration(hintText: "About me"),
+                                  onSaved: (value) => setState(() => user.bio = value),
+                                ),
+                                TextFormField(
+                                  validator: (value) => Validator.validateShortLength(value),
+                                  style: Theme.of(context).textTheme.bodyText2,
+                                  initialValue: user.jobTitle,
+                                  decoration: InputDecoration(hintText: "Position Title"),
+                                  onSaved: (value) => setState(() => user.jobTitle = value),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: MaterialButton(
+                                    shape: StadiumBorder(),
+                                    textColor: Theme.of(context).textTheme.button.color,
+                                    child: Text("Submit changes"),
+                                    onPressed: () async => await submitForm(user),
+                                  ),
+                                )
+                              ],
                             ),
+                          ),
                     ),
                     RaisedButton(
                       onPressed: () async => await auth.signOut(),
@@ -200,9 +190,114 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   Future<void> submitForm(User user) async {
-    formKey.currentState.save();
-    await UserFirestore.updateUser(user);
-    editMode = false;
-    setState(() {});
+    if(formKey.currentState.validate()){
+      formKey.currentState.save();
+      await UserFirestore.updateUser(user);
+      setState(() {
+        editMode = false;
+      });
+    }
+  }
+
+}
+
+class SurveyWidget extends StatefulWidget {
+  @override
+  _SurveyWidgetState createState() => _SurveyWidgetState();
+}
+
+class _SurveyWidgetState extends State<SurveyWidget> {
+
+  int questionIndex = 0;
+
+  HashMap<String, String> surveyResponse = HashMap();
+
+  @override
+  Widget build(BuildContext context) {
+
+    List<SurveyQuestion> surveyQuestions = SurveyQuestions.getSurveyQuestions();
+
+    List<Widget> pages = surveyQuestions
+      .map((surveyQuestion) {
+        return SurveyQuestionWidget(
+          surveyQuestion: surveyQuestion,
+          addResponse: addResponse,
+          surveyResponse: surveyResponse,
+        );
+    }).toList();
+
+    return Dialog(child: Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          pages[questionIndex],
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              questionIndex > 0 ? RaisedButton(child: Text("Back"), onPressed:  () => setQuestionIndex(questionIndex - 1)) : Container(),
+              questionIndex + 1 < surveyQuestions.length ?
+              RaisedButton(child: Text("Next"), onPressed: surveyResponse[surveyQuestions[questionIndex].question] != null ? () {
+                setQuestionIndex(questionIndex + 1);
+              } : null)
+                : RaisedButton(child: Text("Complete"), onPressed: (){},)
+            ],
+          )
+        ],
+      ),
+    ));
+
+  }
+
+  void addResponse(String question, String answer){
+    setState(() {
+      surveyResponse[question] = answer;
+    });
+  }
+
+  void setQuestionIndex(int index){
+    setState(() {
+      questionIndex = index;
+    });
+  }
+
+}
+
+class SurveyQuestionWidget extends StatefulWidget {
+
+  final SurveyQuestion surveyQuestion;
+  final HashMap<String, String> surveyResponse;
+  final Function(String, String) addResponse;
+
+  const SurveyQuestionWidget({Key key, this.surveyQuestion, this.addResponse, this.surveyResponse}) : super(key: key);
+
+  @override
+  _SurveyQuestionWidgetState createState() => _SurveyQuestionWidgetState();
+}
+
+class _SurveyQuestionWidgetState extends State<SurveyQuestionWidget> {
+
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(widget.surveyQuestion.question, style: TextStyle(color: Colors.black),),
+        Column(
+          children: widget.surveyQuestion.answerOptions
+            .map((answer) => FlatButton(
+              color: widget.surveyResponse[widget.surveyQuestion.question] == answer ? Colors.green : Colors.white,
+              child: Text(answer),
+              onPressed: () => widget.addResponse(widget.surveyQuestion.question, answer),))
+            .toList(),
+        ),
+      ],
+    );
   }
 }
+
+
+

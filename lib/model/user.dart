@@ -1,3 +1,4 @@
+import 'package:techpointchallenge/model/recognition.dart';
 import 'package:techpointchallenge/model/schedule.dart';
 
 class User {

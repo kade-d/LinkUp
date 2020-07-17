@@ -8,6 +8,7 @@ import 'package:techpointchallenge/pages/calendar_page.dart';
 import 'package:techpointchallenge/pages/team_page.dart';
 import 'package:techpointchallenge/services/authentication.dart';
 import 'package:techpointchallenge/services/firestore/user_firestore.dart';
+import 'package:techpointchallenge/widgets/logo.dart';
 import 'services/globals.dart' as globals;
 
 void main() async {
@@ -33,16 +34,19 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Scheduling App',
       theme: ThemeData(
-        textTheme: GoogleFonts.montserratTextTheme().copyWith(
-          headline1: GoogleFonts.montserrat(fontSize: 38, color: Colors.black),
-          headline2: GoogleFonts.yellowtail(fontSize: 30, color: Colors.black),
-          bodyText2: GoogleFonts.montserrat(fontSize: 22, color: Colors.black)
+        textTheme: GoogleFonts.notoSerifTextTheme().copyWith(
+          headline1: GoogleFonts.abrilFatface(fontSize: 38, color: Colors.white), //PAGE HEADER
+          headline2: GoogleFonts.ebGaramond(fontSize: 34, color: Colors.white, fontWeight: FontWeight.w600, fontStyle: FontStyle.italic), // MONTH
+          bodyText1: GoogleFonts.lora(fontSize: 22, color: Colors.black), //CALENDAR DAYS
+          bodyText2: GoogleFonts.lora(fontSize: 22, color: Colors.white), //DEFAULT
+          button: GoogleFonts.lora(fontSize: 22, color: Colors.white), //BUTTON TEXT COLOR
         ),
-        canvasColor: Colors.blueGrey,
-        accentColor: Colors.white,
+        canvasColor: Color(0xff596e79),
+        dialogBackgroundColor: Colors.white,
+        accentColor: Color(0xffdfd3c3),
         backgroundColor: Colors.grey[300],
         hoverColor: Colors.grey[400],
-        splashColor: Colors.deepOrangeAccent,
+        splashColor: Colors.lightBlue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: Consumer<Authentication>(
@@ -75,10 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    double shortestSide = MediaQuery
-      .of(context)
-      .size
-      .shortestSide;
+    double shortestSide = MediaQuery.of(context).size.shortestSide;
     globals.useMobileLayout = shortestSide < 600;
 
     List<Widget> pages = [
@@ -94,6 +95,10 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Scaffold(
               body: pages[navIndex],
               bottomNavigationBar: BottomNavigationBar(
+                showSelectedLabels: false,
+                showUnselectedLabels: false,
+                selectedIconTheme: IconThemeData(color: Colors.white),
+                selectedLabelStyle: TextStyle(color: Colors.white),
                 backgroundColor: Theme.of(context).accentColor,
                 onTap: (index) => setNavIndex(index),
                 currentIndex: navIndex,
@@ -110,7 +115,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     icon: Icon(MdiIcons.account),
                     title: Text("Account")
                   ),
-
                 ],
               ),
             ),
@@ -121,8 +125,15 @@ class _MyHomePageState extends State<MyHomePage> {
       return Row(
         children: [
           NavigationRail(
+            leading: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Logo(),
+            ),
             backgroundColor: Theme.of(context).accentColor,
             selectedIndex: navIndex,
+            selectedLabelTextStyle: TextStyle(color: Colors.white),
+            selectedIconTheme: IconThemeData(color: Colors.white),
+            labelType: NavigationRailLabelType.all,
             onDestinationSelected: (index) => setNavIndex(index),
             destinations: [
               NavigationRailDestination(
@@ -141,6 +152,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           Expanded(
             child: Scaffold(
+              floatingActionButton: navIndex == 0 ? FloatingActionButton(child: Icon(Icons.add, color: Colors.lightBlue,),onPressed: (){}, backgroundColor: Colors.white,) : Container(),
               body: pages[navIndex],
             ),
           )

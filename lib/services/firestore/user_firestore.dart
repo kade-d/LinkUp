@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:techpointchallenge/model/organization.dart';
 import 'package:techpointchallenge/model/user.dart';
 
 class UserFirestore {
@@ -39,11 +40,18 @@ class UserFirestore {
   static Stream<User> getUserAsStream(String userId){
 
     //TODO func being called too much ?
-    var stream = Firestore.instance.collection('users').document(userId).snapshots().map((snapshot){
+    return Firestore.instance.collection('users').document(userId).snapshots().map((snapshot){
       return User.fromJson(snapshot.data, userId);
     });
+  }
 
-    return stream;
+  static Stream<List<User>> getUsersForOrg(String orgId, List<String> orgEmails){
+
+    return Firestore.instance.collection('users').where("personal_info.email", whereIn: orgEmails).where("org_id", isEqualTo: orgId).snapshots().map((snapshots) {
+      return snapshots.documents.map((snapshot) {
+        return User.fromJson(snapshot.data, snapshot.documentID);
+      }).toList();
+    }).handleError((e) => print("Get users for org error: " + e.toString() + "\nEmails: " + orgEmails.toString()));
   }
 
   static Future<void> updateUser(User user) async {
@@ -55,5 +63,6 @@ class UserFirestore {
         print("Update user error: " + e.toString());
       }
     );
+
   }
 }
