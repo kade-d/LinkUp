@@ -1,6 +1,6 @@
 {
-    "name": "techpointchallenge",
-    "short_name": "techpointchallenge",
+    "name": "Link Up",
+    "short_name": "Link Up",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
@@ -10,13 +10,8 @@
     "prefer_related_applications": false,
     "icons": [
         {
-            "src": "icons/Icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png"
-        },
-        {
-            "src": "icons/Icon-512.png",
-            "sizes": "512x512",
+            "src": "favicon.png",
+            "sizes": "96x96",
             "type": "image/png"
         }
     ]

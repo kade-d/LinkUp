@@ -1,7 +1,9 @@
 import 'dart:collection';
 
+import 'package:assorted_layout_widgets/assorted_layout_widgets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:techpointchallenge/assets/survey_questions.dart';
@@ -11,6 +13,8 @@ import 'package:techpointchallenge/services/authentication.dart';
 import 'package:techpointchallenge/services/firestore/user_firestore.dart';
 import 'package:techpointchallenge/services/storage/firebase_storage.dart';
 import 'package:techpointchallenge/services/validator.dart';
+import 'package:techpointchallenge/widgets/logo.dart';
+import 'package:techpointchallenge/widgets/status_indicator.dart';
 import 'package:techpointchallenge/widgets/upload_picture_widget.dart';
 import '../services/globals.dart' as globals;
 import 'dart:html';
@@ -38,17 +42,39 @@ class _AccountPageState extends State<AccountPage> {
             return Consumer<User>(
               builder: (context, user, child) {
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    ColumnSuper(
+                      innerDistance: -90,
                       children: [
-                        CircularUploadPic(
+                        RectangularUploadPic(
+                          owner: true,
+                          photoUrl: user.bannerPhotoUrl,
                           onNewImageSelected: (file) async {
-                            user.photoUrl = await FirebaseStorage.uploadImage(file, "users/" + user.firebaseId.toString());
+                            user.bannerPhotoUrl = await FirebaseStorage.uploadImage(file, "users/" + user.firebaseId);
                             UserFirestore.updateUser(user);
-                          },
-                          photoUrl: user.photoUrl,
-                          radius: 60,
+                          }
+                        ),
+                        ColumnSuper(
+                          innerDistance: -5,
+                          children: [
+                            CircularUploadPic(
+                              owner: true,
+                              onNewImageSelected: (file) async {
+                                user.photoUrl = await FirebaseStorage.uploadImage(file, "users/" + user.firebaseId.toString());
+                                UserFirestore.updateUser(user);
+                              },
+                              photoUrl: user.photoUrl,
+                              radius: 50,
+                            ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                StatusIndicatorOwner(user: user,),
+                                Text(user.status.text,),
+                              ],
+                            )
+                          ],
                         )
                       ],
                     ),
@@ -59,7 +85,7 @@ class _AccountPageState extends State<AccountPage> {
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Container(
-                        decoration: BoxDecoration(border: Border.all(color: Colors.white10)),
+                        decoration: BoxDecoration(border: Border.all(color: Colors.grey[200])),
                         height: 1,
                         width: MediaQuery.of(context).size.width * .9,
                       ),
@@ -77,7 +103,7 @@ class _AccountPageState extends State<AccountPage> {
                                       textColor: Theme.of(context).textTheme.button.color,
                                       label: Text("Tell us more"),
                                       icon: Icon(MdiIcons.clipboardOutline),
-                                      onPressed: () => showDialog(context: context, builder: (context) => SurveyWidget()),
+                                      onPressed: () => showDialog(context: context, builder: (context) => SurveyWidget(user: user,)),
                                     ),
                                     FlatButton.icon(
                                       textColor: Theme.of(context).textTheme.button.color,
@@ -139,18 +165,39 @@ class _AccountPageState extends State<AccountPage> {
                                   decoration: InputDecoration(hintText: "Position Title"),
                                   onSaved: (value) => setState(() => user.jobTitle = value),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: MaterialButton(
-                                    shape: StadiumBorder(),
-                                    textColor: Theme.of(context).textTheme.button.color,
-                                    child: Text("Submit changes"),
-                                    onPressed: () async => await submitForm(user),
-                                  ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: MaterialButton(
+                                        shape: StadiumBorder(),
+                                        textColor: Theme.of(context).textTheme.button.color,
+                                        child: Row(
+                                          children: [
+                                            Text("Save"),
+                                            Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: Icon(Icons.arrow_forward),
+                                            )
+                                          ],
+                                        ),
+                                        onPressed: () async => await submitForm(user),
+                                      ),
+                                    ),
+                                  ],
                                 )
                               ],
                             ),
                           ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        decoration: BoxDecoration(border: Border.all(color: Colors.grey[200])),
+                        height: 1,
+                        width: MediaQuery.of(context).size.width * .9,
+                      ),
                     ),
                     RaisedButton(
                       onPressed: () async => await auth.signOut(),
@@ -164,19 +211,20 @@ class _AccountPageState extends State<AccountPage> {
                           borderRadius: BorderRadius.all(Radius.circular(80.0)),
                         ),
                         child: Container(
-                          constraints: const BoxConstraints(
-                              maxWidth: 130.0,
-                              minWidth: 88,
-                              minHeight: 36), // min sizes for Material buttons
+                          constraints: const BoxConstraints(maxWidth: 130.0, minWidth: 88, minHeight: 36), // min sizes for Material buttons
                           alignment: Alignment.center,
-                          child: const Text(
-                            "Sign Out",
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.white,
+                          child: const Text("Sign Out", style: TextStyle(fontSize: 20, color: Colors.white,
                             ),
                           ),
                         ),
+                      ),
+                    ),
+                    FlatButton(
+                      child: Text("About Link Up", style: GoogleFonts.robotoMono(fontSize: 12),),
+                      onPressed: () => showAboutDialog(
+                        context: context,
+                        applicationIcon: Logo(width: MediaQuery.of(context).size.width * .2,),
+                        applicationLegalese: "By signing in and using this application you agree to our Privacy Policy."
                       ),
                     )
                   ],
@@ -202,6 +250,11 @@ class _AccountPageState extends State<AccountPage> {
 }
 
 class SurveyWidget extends StatefulWidget {
+
+  final User user;
+
+  const SurveyWidget({Key key, @required this.user}) : super(key: key);
+
   @override
   _SurveyWidgetState createState() => _SurveyWidgetState();
 }
@@ -223,6 +276,7 @@ class _SurveyWidgetState extends State<SurveyWidget> {
           surveyQuestion: surveyQuestion,
           addResponse: addResponse,
           surveyResponse: surveyResponse,
+          user: widget.user,
         );
     }).toList();
 
@@ -236,12 +290,24 @@ class _SurveyWidgetState extends State<SurveyWidget> {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              questionIndex > 0 ? RaisedButton(child: Text("Back"), onPressed:  () => setQuestionIndex(questionIndex - 1)) : Container(),
+              questionIndex > 0 ? Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: RaisedButton(child: Text("Back"), onPressed:  () => setQuestionIndex(questionIndex - 1)),
+              ) : Container(),
               questionIndex + 1 < surveyQuestions.length ?
-              RaisedButton(child: Text("Next"), onPressed: surveyResponse[surveyQuestions[questionIndex].question] != null ? () {
-                setQuestionIndex(questionIndex + 1);
-              } : null)
-                : RaisedButton(child: Text("Complete"), onPressed: (){},)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: RaisedButton(child: Text("Next"), onPressed: surveyResponse[surveyQuestions[questionIndex].question] != null ? () {
+                  setQuestionIndex(questionIndex + 1);
+                } : null),
+              )
+                : Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: RaisedButton(child: Text("Complete"), onPressed: () async {
+                    await completeSurvey();
+                    Navigator.of(context).pop();
+              },),
+                )
             ],
           )
         ],
@@ -256,6 +322,11 @@ class _SurveyWidgetState extends State<SurveyWidget> {
     });
   }
 
+  Future<void> completeSurvey() async {
+    widget.user.surveyResponses = surveyResponse;
+    await UserFirestore.updateUser(widget.user);
+  }
+
   void setQuestionIndex(int index){
     setState(() {
       questionIndex = index;
@@ -266,19 +337,18 @@ class _SurveyWidgetState extends State<SurveyWidget> {
 
 class SurveyQuestionWidget extends StatefulWidget {
 
+  final User user;
   final SurveyQuestion surveyQuestion;
   final HashMap<String, String> surveyResponse;
   final Function(String, String) addResponse;
 
-  const SurveyQuestionWidget({Key key, this.surveyQuestion, this.addResponse, this.surveyResponse}) : super(key: key);
+  const SurveyQuestionWidget({Key key, this.surveyQuestion, this.addResponse, this.surveyResponse, @required this.user}) : super(key: key);
 
   @override
   _SurveyQuestionWidgetState createState() => _SurveyQuestionWidgetState();
 }
 
 class _SurveyQuestionWidgetState extends State<SurveyQuestionWidget> {
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -289,6 +359,7 @@ class _SurveyQuestionWidgetState extends State<SurveyQuestionWidget> {
         Column(
           children: widget.surveyQuestion.answerOptions
             .map((answer) => FlatButton(
+              splashColor: Colors.transparent,
               color: widget.surveyResponse[widget.surveyQuestion.question] == answer ? Colors.green : Colors.white,
               child: Text(answer),
               onPressed: () => widget.addResponse(widget.surveyQuestion.question, answer),))
@@ -297,6 +368,8 @@ class _SurveyQuestionWidgetState extends State<SurveyQuestionWidget> {
       ],
     );
   }
+
+
 }
 
 

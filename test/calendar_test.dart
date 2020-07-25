@@ -1,12 +1,11 @@
 import 'package:duration/duration.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:techpointchallenge/main.dart';
 import 'package:techpointchallenge/services/calendar_helper.dart';
 import 'package:techpointchallenge/services/duration_helper.dart';
 
 void main() {
+
   test('Calendar Test', () {
     CalendarHelper calendarHelper = CalendarHelper();
 
@@ -20,28 +19,11 @@ void main() {
 
   });
 
+  test('Get days in view test', () {
+    CalendarHelper calendarHelper = CalendarHelper();
 
-  test('Duration Parse Test', () {
-
-    Duration actualDuration = Duration(minutes: 15);
-
-    Duration matchDuration = parseDuration("15m");
-
-    print(matchDuration);
-
-    expect(actualDuration, matchDuration);
+    print(DateTime(2019, 11, 3).add(Duration(days: 1)));
 
   });
 
-  test('Human Duration Parse Test', () {
-
-    Duration actualDuration = Duration(minutes: 15);
-
-    Duration matchDuration = DurationHelper.parseHumanDuration("15 minutes");
-
-    print(matchDuration);
-
-    expect(actualDuration, matchDuration);
-
-  });
 }

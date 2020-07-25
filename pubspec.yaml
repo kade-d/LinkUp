@@ -10,12 +10,14 @@ environment:
 
 
 dependencies:
+  assorted_layout_widgets: ^1.1.3
   auto_size_text: ^2.1.0
   bubble_tab_indicator: ^0.1.4
   cached_network_image: ^2.2.0+1
   cloud_firestore: ^0.13.7
   cupertino_icons: ^0.1.3
   duration: ^2.0.14
+  easy_web_view: ^1.3.0
   firebase: ^7.3.0
   firebase_auth: ^0.16.1
   firebase_core: ^0.4.5
@@ -27,12 +29,18 @@ dependencies:
   intl: ^0.16.1
   material_design_icons_flutter: 4.0.5345
   provider: ^4.1.3
+  rxdart: ^0.24.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
 flutter:
-
   uses-material-design: true
+
+  assets:
+    - assets/logo.png
+
+
+
 

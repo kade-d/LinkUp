@@ -5,7 +5,9 @@ import 'event.dart';
 
 class Schedule {
 
-  List<Event> events;
+  List<Event> events = List();
+
+  Schedule.fromNothing();
 
   Schedule(this.events);
 

@@ -5,5 +5,4 @@ class SurveyQuestion {
 
   SurveyQuestion(this.question, this.answerOptions);
 
-
 }

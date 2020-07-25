@@ -1,7 +1,11 @@
+import 'dart:math';
+
+import 'package:assorted_layout_widgets/assorted_layout_widgets.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:techpointchallenge/model/schedule.dart';
@@ -11,8 +15,15 @@ import 'package:techpointchallenge/model/event.dart';
 import 'package:techpointchallenge/services/duration_helper.dart';
 import 'package:techpointchallenge/services/firestore/schedule_firestore.dart';
 import 'package:techpointchallenge/services/validator.dart';
+import 'package:techpointchallenge/services/globals.dart' as globals;
+
 
 class CalendarPage extends StatefulWidget {
+
+  final bool aliasMode;
+
+  const CalendarPage({Key key, @required this.aliasMode}) : super(key: key);
+
   @override
   _CalendarPageState createState() => _CalendarPageState();
 }
@@ -25,8 +36,8 @@ class _CalendarPageState extends State<CalendarPage> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: CalendarView(),
+              padding: EdgeInsets.all(globals.useMobileLayout ? 5: 20),
+              child: CalendarView(aliasMode: widget.aliasMode),
             )
           ],
         ),
@@ -36,6 +47,11 @@ class _CalendarPageState extends State<CalendarPage> {
 }
 
 class CalendarView extends StatefulWidget {
+
+  final bool aliasMode;
+
+  const CalendarView({Key key, @required this.aliasMode}) : super(key: key);
+
   @override
   _CalendarViewState createState() => _CalendarViewState();
 }
@@ -58,13 +74,13 @@ class _CalendarViewState extends State<CalendarView> {
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.only(bottom: 30),
+                padding: EdgeInsets.only(bottom: widget.aliasMode ? 8 : 30),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     MaterialButton(
                       color: Colors.white,
-                      shape: CircleBorder(),
+                      shape: StadiumBorder(),
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Icon(Icons.arrow_back),
@@ -75,14 +91,18 @@ class _CalendarViewState extends State<CalendarView> {
                                 now.year, now.month)));
                       }),
                     ),
-                    Text(
-                      viewDate == now
-                          ? formatter.format(now)
-                          : formatter.format(viewDate),
-                      style: Theme.of(context).textTheme.headline2,
+                    Flexible(
+                      child: AutoSizeText(
+                        viewDate == now
+                            ? formatter.format(now)
+                            : formatter.format(viewDate),
+                        maxLines: 1,
+                        style: Theme.of(context).textTheme.headline2,
+                      ),
                     ),
                     MaterialButton(
-                      shape: CircleBorder(),
+                      padding: EdgeInsets.all(0),
+                      shape: StadiumBorder(),
                       color: Colors.white,
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
@@ -107,9 +127,7 @@ class _CalendarViewState extends State<CalendarView> {
                 shrinkWrap: true,
                 mainAxisSpacing: 1,
                 crossAxisSpacing: 1,
-                children: viewDate == now
-                    ? getMonthGridViewChildren(user, now, true, user.schedule)
-                    : getMonthGridViewChildren(user, viewDate, false, user.schedule),
+                children: getMonthGridViewChildren(user, viewDate, true, user.schedule),
               ),
             ],
           );
@@ -126,53 +144,70 @@ class _CalendarViewState extends State<CalendarView> {
 
     List<Widget> children = List();
 
-    var formatter = DateFormat(DateFormat.ABBR_WEEKDAY);
-
-    for(int x = 1; x <= 7; x++){
-      DateTime childDate = DateTime(selectedMonth.year, selectedMonth.month, x);
-      children.add(Expanded(child: Text(formatter.format(childDate))));
-    }
+    children.add(Expanded(child: Text("Mon"),));
+    children.add(Expanded(child: Text("Tue"),));
+    children.add(Expanded(child: Text("Wed"),));
+    children.add(Expanded(child: Text("Thu"),));
+    children.add(Expanded(child: Text("Fri"),));
+    children.add(Expanded(child: Text("Sat"),));
+    children.add(Expanded(child: Text("Sun"),));
 
     return children;
   }
 
   List<Widget> getMonthGridViewChildren(User user, DateTime selectedMonth, bool isCurrent, Schedule schedule) {
+
+    DateTime now = DateTime.now();
+
     List<Widget> children = List();
     
-    for (int x = 1; x <= calendarHelper.getDaysInCurrentMonth(selectedMonth.year, selectedMonth.month); x++) {
-      DateTime childDate = DateTime(selectedMonth.year, selectedMonth.month, x);
+    for (DateTime childDate in calendarHelper.getDaysInCurrentView(selectedMonth.year, selectedMonth.month)) {
 
       List<Event> childDateEvents = schedule.getEventsForDay(childDate);
 
-      children.add(Material(
-        color: x == selectedMonth.day && isCurrent ? Theme.of(context).accentColor : Colors.white,
-        child: InkWell(
-          onTap: () => showDialog<void>(
-              context: context,
-              builder: (context) {
-                return DayDialog(schedule, childDate, user);
-              }),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [Text(x.toString(), style: Theme.of(context).textTheme.bodyText1,)
-                  ],
+      Color color;
+
+      if (childDate.month != selectedMonth.month){
+        color = Colors.grey[200];
+      } else {
+        color = Colors.white;
+      }
+
+      children.add(Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: childDate.isBefore(now) && now.isBefore(childDate.add(Duration(days: 1))) ? Theme.of(context).accentColor : color, width: 2)
+        ),
+        child: Material(
+          color: color,
+          child: InkWell(
+            onTap: () => showDialog<void>(
+                context: context,
+                builder: (context) {
+                  return DayDialog(schedule, childDate, user, widget.aliasMode);
+                }),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(5),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [Text(childDate.day.toString(), style: Theme.of(context).textTheme.bodyText1,)
+                    ],
+                  ),
                 ),
-              ),
-              childDateEvents.length == 0
-                  ? Container()
-                  : Flexible(
-                      child: Center(
-                        child: Text(
-                        childDateEvents.length.toString() + " Event(s)", style: Theme.of(context).textTheme.bodyText1,
-                        maxLines: 1,
-                      )),
-                    )
-            ],
+                childDateEvents.length == 0
+                    ? Container()
+                    : Flexible(
+                        child: Center(
+                          child: AutoSizeText(
+                          childDateEvents.length.toString() + " Events", style: Theme.of(context).textTheme.bodyText1,
+                          maxLines: 1,
+                            minFontSize: 10,
+                        )),
+                      )
+              ],
+            ),
           ),
         ),
       ));
@@ -182,11 +217,13 @@ class _CalendarViewState extends State<CalendarView> {
 }
 
 class DayDialog extends StatefulWidget {
+
   final Schedule schedule;
   final DateTime selectedDate;
   final User user;
+  final bool aliasMode;
 
-  DayDialog(this.schedule, this.selectedDate, this.user);
+  DayDialog(this.schedule, this.selectedDate, this.user, this.aliasMode);
 
   @override
   _DayDialogState createState() => _DayDialogState();
@@ -211,8 +248,10 @@ class _DayDialogState extends State<DayDialog> {
 
     TextEditingController timeController = TextEditingController();
 
+    var size = MediaQuery.of(context).size;
+
     return AlertDialog(
-      title: Text(formatter.format(widget.selectedDate)),
+      title: Text(formatter.format(widget.selectedDate), style: Theme.of(context).textTheme.bodyText1,),
       content: Form(
         key: formKey,
         child: Column(
@@ -244,14 +283,15 @@ class _DayDialogState extends State<DayDialog> {
                         decoration: InputDecoration(labelText: "Start time"),
                       ),
                       TextFormField(
+                        validator: (value) => Validator.validateDuration(value),
                         onSaved: (value) => event.endDate = event.startDate.add(DurationHelper.parseHumanDuration(value)),
-                        decoration: InputDecoration(labelText: "Duration (e.g. 15m or 2 hours)"),
+                        decoration: InputDecoration(labelText: "Duration (e.g. 15m or 2h)"),
                       ),
                     ],
                   )
                 : eventList.length == 0
-                    ? Center(child: Text("No events for today"),)
-                    : Container(constraints: BoxConstraints.tight(MediaQuery.of(context).size * .25),
+                    ? Center(child: Text("No events for today", style: Theme.of(context).textTheme.bodyText1,))
+                    : Container(constraints: BoxConstraints.tight(globals.useMobileLayout ? Size(size.width * .9, size.height * .5) : Size(size.width * .25, size.height * .3)),
                         child: EventList(eventList)
             ),
           ],
@@ -265,17 +305,7 @@ class _DayDialogState extends State<DayDialog> {
                     padding: const EdgeInsets.all(8.0),
                     child: MaterialButton(
                       shape: StadiumBorder(),
-                      onPressed: () async {
-                        if(formKey.currentState.validate()){
-                          formKey.currentState.save();
-                          await ScheduleFirestore.addScheduleItem(
-                            event, widget.user.firebaseId);
-                          Navigator.of(context).pop();
-                          setState(() {
-                            addEventMode = false;
-                          });
-                        }
-                      },
+                      onPressed: () async => await submitForm(formKey),
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text("Complete"),
@@ -286,7 +316,7 @@ class _DayDialogState extends State<DayDialog> {
               )
             : Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: MaterialButton(
+                child: widget.aliasMode ? Container() : MaterialButton(
                   shape: StadiumBorder(),
                   onPressed: () async {
                     setState(() {
@@ -302,6 +332,18 @@ class _DayDialogState extends State<DayDialog> {
       ],
     );
   }
+
+  Future<void> submitForm(GlobalKey<FormState> formKey) async {
+    if(formKey.currentState.validate()){
+      formKey.currentState.save();
+      await ScheduleFirestore.addScheduleItem(
+        event, widget.user.firebaseId);
+      Navigator.of(context).pop();
+      setState(() {
+        addEventMode = false;
+      });
+    }
+  }
 }
 
 class EventList extends StatelessWidget {
@@ -310,18 +352,43 @@ class EventList extends StatelessWidget {
 
   EventList(this.events, {this.shrinkWrap});
 
+  ScrollController scrollController = ScrollController();
+
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      primary: false,
-      shrinkWrap: shrinkWrap ?? true,
-      itemCount: events.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-          title: Text(events[index].name),
-          leading: Text(DateFormat('jm').format(events[index].startDate)),
-        );
-      },
+    return Scrollbar(
+      controller: scrollController,
+      isAlwaysShown: true,
+      child: ListView.builder(
+        controller: scrollController,
+        primary: false,
+        shrinkWrap: shrinkWrap ?? true,
+        itemCount: events.length,
+        itemBuilder: (context, index) {
+          var event = events[index];
+          int minuteLength = event.endDate.difference(event.startDate).inMinutes;
+          double logLength = log(minuteLength)/log(10);
+          return ColumnSuper(
+            innerDistance: -30,
+            children: [
+              ListTile(
+                leading: Text(DateFormat('jm').format(event.startDate)),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 15, bottom: 10, right: 15),
+                child: ListTile(
+                  leading: Container(width: 5, height: 20 * logLength, color: Theme.of(context).accentColor,),
+                  title: Text(event.name),
+                  trailing: Text(minuteLength.toString() + " Minutes"),
+                ),
+              ),
+              ListTile(
+                leading: Text(DateFormat('jm').format(event.endDate)),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:techpointchallenge/model/organization.dart';
+import 'package:techpointchallenge/model/recognition.dart';
 import 'package:techpointchallenge/model/user.dart';
 import 'package:techpointchallenge/services/firestore/user_firestore.dart';
 

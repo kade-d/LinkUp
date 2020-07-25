@@ -2,11 +2,10 @@ class Organization {
 
   String name;
   String photoUrl;
+  String bannerPhotoUrl;
 
   String ownerId;
   List<String> invitedUserEmails;
-
-  Organization(this.name, this.photoUrl, this.ownerId, this.invitedUserEmails);
 
   Organization.fromNothing();
 
@@ -17,6 +16,7 @@ class Organization {
     photoUrl = json['photo_url'];
     ownerId = json['owner_id'];
     invitedUserEmails = json['invited_user_emails'].cast<String>().toList();
+    bannerPhotoUrl = json['banner_photo_url'];
   }
 
   dynamic toJson(){
@@ -25,7 +25,8 @@ class Organization {
         "name" : name,
         "owner_id" : ownerId,
         "photo_url" : photoUrl,
-        "invited_user_emails" : invitedUserEmails
+        "invited_user_emails" : invitedUserEmails,
+        "banner_photo_url" : bannerPhotoUrl
       }
     );
   }

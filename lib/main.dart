@@ -1,3 +1,5 @@
+import 'dart:html';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -9,7 +11,9 @@ import 'package:techpointchallenge/pages/team_page.dart';
 import 'package:techpointchallenge/services/authentication.dart';
 import 'package:techpointchallenge/services/firestore/user_firestore.dart';
 import 'package:techpointchallenge/widgets/logo.dart';
+import 'model/user.dart';
 import 'services/globals.dart' as globals;
+import 'dart:ui' as ui;
 
 void main() async {
 
@@ -32,18 +36,20 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return MaterialApp(
-      title: 'Scheduling App',
+      title: 'Link Up',
       theme: ThemeData(
-        textTheme: GoogleFonts.notoSerifTextTheme().copyWith(
-          headline1: GoogleFonts.abrilFatface(fontSize: 38, color: Colors.white), //PAGE HEADER
-          headline2: GoogleFonts.ebGaramond(fontSize: 34, color: Colors.white, fontWeight: FontWeight.w600, fontStyle: FontStyle.italic), // MONTH
-          bodyText1: GoogleFonts.lora(fontSize: 22, color: Colors.black), //CALENDAR DAYS
-          bodyText2: GoogleFonts.lora(fontSize: 22, color: Colors.white), //DEFAULT
-          button: GoogleFonts.lora(fontSize: 22, color: Colors.white), //BUTTON TEXT COLOR
+        textTheme: GoogleFonts.comfortaaTextTheme().copyWith(
+          headline1: GoogleFonts.openSans(fontSize: 38, color: Colors.black), //PAGE HEADER
+          headline2: GoogleFonts.montserrat(fontSize: 34, color: Colors.black), // MONTH
+          overline: GoogleFonts.chauPhilomeneOne(fontSize: 90, color: Colors.black, fontStyle: FontStyle.italic), //LOGO
+          headline3: GoogleFonts.chauPhilomeneOne(fontSize: 34, color: Colors.black, fontStyle: FontStyle.italic), //SIDEBAR LOGO
+          bodyText1: GoogleFonts.comfortaa(fontSize: 22, color: Colors.black), //CALENDAR DAYS
+          bodyText2: GoogleFonts.comfortaa(fontSize: 22, color: Colors.black), //DEFAULT
+          button: GoogleFonts.comfortaa(fontSize: 22, color: Colors.black), //BUTTON TEXT COLOR
         ),
-        canvasColor: Color(0xff596e79),
+        canvasColor: Colors.grey[300],
         dialogBackgroundColor: Colors.white,
-        accentColor: Color(0xffdfd3c3),
+        accentColor: Colors.blue[700],
         backgroundColor: Colors.grey[300],
         hoverColor: Colors.grey[400],
         splashColor: Colors.lightBlue,
@@ -56,7 +62,11 @@ class MyApp extends StatelessWidget {
           } else {
             return MultiProvider(
               providers: [
-                StreamProvider(create: (context) => UserFirestore.getUserAsStream(auth.firebaseUser.uid),)
+                StreamProvider<User>(
+                  create: (context)  {
+                    return UserFirestore.getUserAsStream(auth.firebaseUser.uid);
+                  },
+                )
               ],
               child: MyHomePage()
             );
@@ -80,10 +90,10 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     double shortestSide = MediaQuery.of(context).size.shortestSide;
-    globals.useMobileLayout = shortestSide < 600;
+    globals.useMobileLayout = shortestSide < 700;
 
     List<Widget> pages = [
-      CalendarPage(),
+      CalendarPage(aliasMode: false,),
       TeamsPage(),
       AccountPage(),
     ];
@@ -127,7 +137,7 @@ class _MyHomePageState extends State<MyHomePage> {
           NavigationRail(
             leading: Padding(
               padding: const EdgeInsets.all(20.0),
-              child: Logo(),
+              child: Logo(width: 150,),
             ),
             backgroundColor: Theme.of(context).accentColor,
             selectedIndex: navIndex,
@@ -152,7 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           Expanded(
             child: Scaffold(
-              floatingActionButton: navIndex == 0 ? FloatingActionButton(child: Icon(Icons.add, color: Colors.lightBlue,),onPressed: (){}, backgroundColor: Colors.white,) : Container(),
+              floatingActionButton: navIndex == 0 ? Container() : Container(),
               body: pages[navIndex],
             ),
           )

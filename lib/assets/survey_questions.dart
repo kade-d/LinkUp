@@ -6,8 +6,8 @@ class SurveyQuestions {
   static List<SurveyQuestion> getSurveyQuestions(){
 
     return [
-      SurveyQuestion("What is your favorite color?", ["Blue", "Green", "Red", "Yellow"]),
-      SurveyQuestion("What is your favorite number?", ["1", "2", "5", "7"])
+      SurveyQuestion("What is your favorite sport?", ["Football", "Basketball", "Baseball", "Soccer"]),
+      SurveyQuestion("What would be your favorite vacation?", ["Beach", "Mountains", "City", "Cruise"])
     ];
 
   }

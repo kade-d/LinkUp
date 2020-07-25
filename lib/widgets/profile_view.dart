@@ -32,8 +32,8 @@ class _UserProfileState extends State<UserProfile> {
     ];
 
     List<Widget> pages = [
-      CalendarPage(),
-      AboutUserWidget(user: widget.viewingUser,),
+      CalendarPage(aliasMode: true,),
+      AboutUserWidget(viewingUser: widget.viewingUser, signedInUser: widget.signedInUser,),
       UserRecognitionsWidget(signedInUser: widget.signedInUser, viewingUser: widget.viewingUser,)
     ];
 

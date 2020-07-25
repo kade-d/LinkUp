@@ -1,25 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:techpointchallenge/model/organization.dart';
+import 'dart:math';
 import 'package:techpointchallenge/model/user.dart';
 
 class UserFirestore {
 
-  static Future<void> createUser(FirebaseUser user) async {
-    if(await getUser(user.uid) == null) {
-      await Firestore.instance.collection('users').document(user.uid).setData(
-        {
-          "personal_info":  {
-            "name" : user.displayName,
-            "email" : user.email,
-            "photo_url" : user.photoUrl,
-            "bio" : null,
-            "job_title" : null,
-          },
-        },
-        merge: true
-      );
+  static Future<void> createUser(FirebaseUser firebaseUser) async {
+    User user = User.fromNothing();
+    user.firebaseId = firebaseUser.uid;
+    user.email = firebaseUser.email;
+    user.photoUrl = firebaseUser.photoUrl;
+    user.name = firebaseUser.displayName;
+
+    if (await getUser(firebaseUser.uid) == null) {
+      if(user != null){
+        await Firestore.instance.collection('users').document(firebaseUser.uid).setData(user.toJson(), merge: true);
+      }
     }
+
   }
 
   static Future<User> getUser(String userId) async {
@@ -45,13 +43,24 @@ class UserFirestore {
     });
   }
 
-  static Stream<List<User>> getUsersForOrg(String orgId, List<String> orgEmails){
+  static Future<List<User>> getUsersForOrg(String orgId, List<String> orgEmails) async {
 
-    return Firestore.instance.collection('users').where("personal_info.email", whereIn: orgEmails).where("org_id", isEqualTo: orgId).snapshots().map((snapshots) {
-      return snapshots.documents.map((snapshot) {
-        return User.fromJson(snapshot.data, snapshot.documentID);
-      }).toList();
-    }).handleError((e) => print("Get users for org error: " + e.toString() + "\nEmails: " + orgEmails.toString()));
+    List<User> users = List();
+    for(int i = 0; i < orgEmails.length; i += 10){
+      int chunkEnd = [i+9, orgEmails.length].reduce(min);
+      List<User> tempUsers = await Firestore.instance.collection('users')
+        .where("personal_info.email", whereIn: orgEmails.sublist(i, chunkEnd))
+        .where("org_id", isEqualTo: orgId)
+        .getDocuments()
+        .then((snapshot) {
+          return snapshot.documents.map((document) {
+            return User.fromJson(document.data, document.documentID);
+          }).toList();
+      }).catchError((e) => print("Get users for org error: " + e.toString() + "\nEmails: " + orgEmails.toString()));
+
+      tempUsers.forEach((user) => users.add(user));
+    }
+    return users;
   }
 
   static Future<void> updateUser(User user) async {

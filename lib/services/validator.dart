@@ -7,6 +7,15 @@ class Validator {
     return null;
   }
 
+  static String validateDuration(String input){
+
+    final match = RegExp(r'^(\d+)[ ]*(d|h|m)[a-z| ]*$').matchAsPrefix(input);
+    if (match == null){
+      return "Not a valid duration";
+    }
+    return null;
+  }
+
   static String validateShortLength(String input){
     if (validateNotEmpty(input) != null) {
       return validateNotEmpty(input);

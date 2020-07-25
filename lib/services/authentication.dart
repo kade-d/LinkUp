@@ -5,7 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:techpointchallenge/services/firestore/org_firestore.dart';
 import 'package:techpointchallenge/services/firestore/user_firestore.dart';
 
 class Authentication extends ChangeNotifier {
@@ -18,11 +17,9 @@ class Authentication extends ChangeNotifier {
 
     _firebaseAuth.onAuthStateChanged.listen((user) async {
       if(user != null){
-        if(firebaseUser == null){
-          firebaseUser = user;
-          await UserFirestore.createUser(user);
-          notifyListeners();
-        }
+        firebaseUser = user;
+        await UserFirestore.createUser(user);
+        notifyListeners();
       }
     });
 
@@ -35,7 +32,7 @@ class Authentication extends ChangeNotifier {
     return false;
   }
 
-  Future<void> signInWithGoogle() async{
+  Future<void> signInWithGoogle() async {
     GoogleSignIn _googleSignIn = GoogleSignIn();
     final GoogleSignInAccount googleUser = await _googleSignIn.signIn();
     final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
@@ -46,6 +43,7 @@ class Authentication extends ChangeNotifier {
     );
     try {
       firebaseUser = (await _firebaseAuth.signInWithCredential(credential)).user;
+      UserFirestore.createUser(firebaseUser);
     } on PlatformException catch(e) {
       log("Caught: $e");
       await signOut();
